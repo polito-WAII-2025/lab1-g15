@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version "2.1.10"
 }
 
-group = "org.example"
+group = "org.routeanalyzer"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -11,6 +11,7 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
+    implementation("org.yaml:snakeyaml:2.0")
 }
 
 tasks.test {
