@@ -1,0 +1,136 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "output.json file schema",
+  "type": "object",
+  "properties": {
+    "maxDistanceFromStart": {
+      "type": "object",
+      "properties": {
+        "waypoint": {
+          "type": "object",
+          "properties": {
+            "timestamp": {
+              "type": "number"
+            },
+            "latitude": {
+              "type": "number"
+            },
+            "longitude": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "timestamp",
+            "latitude",
+            "longitude"
+          ]
+        },
+        "distanceKm": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "waypoint",
+        "distanceKm"
+      ]
+    },
+    "mostFrequentedArea": {
+      "type": "object",
+      "properties": {
+        "centralWaypoint": {
+          "type": "object",
+          "properties": {
+            "timestamp": {
+              "type": "number"
+            },
+            "latitude": {
+              "type": "number"
+            },
+            "longitude": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "timestamp",
+            "latitude",
+            "longitude"
+          ]
+        },
+        "areaRadiusKm": {
+          "type": "number"
+        },
+        "entriesCount": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "centralWaypoint",
+        "areaRadiusKm",
+        "entriesCount"
+      ]
+    },
+    "waypointsOutsideGeofence": {
+      "type": "object",
+      "properties": {
+        "centralWaypoint": {
+          "type": "object",
+          "properties": {
+            "timestamp": {
+              "type": "number"
+            },
+            "latitude": {
+              "type": "number"
+            },
+            "longitude": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "timestamp",
+            "latitude",
+            "longitude"
+          ]
+        },
+        "areaRadiusKm": {
+          "type": "number"
+        },
+        "count": {
+          "type": "number"
+        },
+        "waypoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number"
+              },
+              "latitude": {
+                "type": "number"
+              },
+              "longitude": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "timestamp",
+              "latitude",
+              "longitude"
+            ]
+          }
+        }
+      },
+      "required": [
+        "centralWaypoint",
+        "areaRadiusKm",
+        "count",
+        "waypoints"
+      ]
+    }
+  },
+  "required": [
+    "maxDistanceFromStart",
+    "mostFrequentedArea",
+    "waypointsOutsideGeofence"
+  ]
+}

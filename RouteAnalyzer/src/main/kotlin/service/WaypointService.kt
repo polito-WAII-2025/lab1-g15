@@ -1,5 +1,7 @@
 package org.routeanalyzer.service
 
+import org.routeanalyzer.config.Config
+import org.routeanalyzer.model.MaxDistanceFromStart
 import org.routeanalyzer.model.Waypoint
 import java.io.File
 import kotlin.math.sqrt
@@ -9,10 +11,10 @@ import kotlin.math.atan2
 import kotlin.math.pow
 
 object WaypointService {
-    private var waypoints: List<Waypoint>? = null;
+    private var waypoints: List<Waypoint> = emptyList()
 
     fun loadWaypoints(path: String) {
-        if (waypoints != null) {
+        if (waypoints.isNotEmpty()) {
             return
         }
         val file = File(path)
@@ -23,25 +25,46 @@ object WaypointService {
         waypoints = loadedWaypoints
     }
 
-    fun waypointsWithinRegion(latitude : Double, longitude : Double, r: Double, earthRadiusKm: Double, lines : List<String>) : List<String> {
-        val waypoints = mutableListOf<String>()
-        for (line in lines) {
-            val parts = line.split(";")
-            if (parts.size < 3) {
-                continue
-            }
-            val lat = parts[1].toDouble()
-            val lon = parts[2].toDouble()
-            val distance = haversineDistance(latitude, longitude, lat, lon, earthRadiusKm)
-
-            if (distance <= r) {
-                waypoints.add(line)
+    fun maxDistanceFromStart(): MaxDistanceFromStart {
+        val start: Waypoint = waypoints.first()
+        var maxDistance: Double = 0.0
+        var resultWaypoint: Waypoint = start
+        waypoints.forEach { waypoint ->
+            val distance = haversineDistance(
+                start.lat, start.long,
+                waypoint.lat, waypoint.long,
+                Config.earthRadiusKm!!
+            )
+            if (distance > maxDistance) {
+                maxDistance = distance
+                resultWaypoint = waypoint
             }
         }
-        return waypoints
+        return MaxDistanceFromStart(resultWaypoint, maxDistance)
     }
 
-    fun haversineDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double, earthRadiusKm: Double): Double {
+    private fun waypointsWithinRegion(
+        latitude: Double,
+        longitude: Double,
+        r: Double
+    ): List<Waypoint> {
+        val resultWaypoints = mutableListOf<Waypoint>()
+        for (waypoint in waypoints) {
+            val distance = haversineDistance(latitude, longitude, waypoint.lat, waypoint.long, Config.earthRadiusKm!!)
+            if (distance <= r) {
+                resultWaypoints.add(waypoint)
+            }
+        }
+        return resultWaypoints
+    }
+
+    private fun haversineDistance(
+        lat1: Double,
+        lon1: Double,
+        lat2: Double,
+        lon2: Double,
+        earthRadiusKm: Double
+    ): Double {
         val lat1Rad = Math.toRadians(lat1)
         val lon1Rad = Math.toRadians(lon1)
         val lat2Rad = Math.toRadians(lat2)
@@ -56,23 +79,20 @@ object WaypointService {
         return earthRadiusKm * c  // Distance in km
     }
 
-    fun timeSpentWithinRegion(latitude: Double, longitude: Double, r: Double, lines: List<String>) : Double {
+    private fun timeSpentWithinRegion(latitude: Double, longitude: Double, r: Double): Double {
         var minTime: Double = Double.MAX_VALUE
         var maxTime: Double = Double.MIN_VALUE
-        val waypointsWithinRegion =  waypointsWithinRegion(latitude, longitude, r,6371.0, lines)
+        val waypointsWithinRegion: List<Waypoint> = waypointsWithinRegion(latitude, longitude, r)
         for (waypoint in waypointsWithinRegion) {
-            val time = waypoint.split(";")[0].toDouble()
-            if (time < minTime){
-                minTime = time
-            }
-            else if (time > maxTime) {
-                maxTime = time
+            if (waypoint.timestamp < minTime) {
+                minTime = waypoint.timestamp
+            } else if (waypoint.timestamp > maxTime) {
+                maxTime = waypoint.timestamp
             }
         }
-        return if ( minTime != Double.MAX_VALUE && maxTime != Double.MIN_VALUE) {
-            ((maxTime - minTime)*10000).toInt().toDouble()/10000
-        }
-        else {
+        return if (minTime != Double.MAX_VALUE && maxTime != Double.MIN_VALUE) {
+            ((maxTime - minTime) * 10000).toInt().toDouble() / 10000
+        } else {
             0.0
         }
     }
