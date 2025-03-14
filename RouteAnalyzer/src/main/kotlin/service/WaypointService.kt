@@ -32,8 +32,8 @@ object WaypointService {
         var resultWaypoint: Waypoint = start
         waypoints.forEach { waypoint ->
             val distance = haversineDistance(
-                start.lat, start.long,
-                waypoint.lat, waypoint.long,
+                start.latitude, start.longitude,
+                waypoint.latitude, waypoint.longitude,
                 Config.earthRadiusKm!!
             )
             if (distance > maxDistance) {
@@ -51,7 +51,7 @@ object WaypointService {
     ): List<Waypoint> {
         val resultWaypoints = mutableListOf<Waypoint>()
         for (waypoint in waypoints) {
-            val distance = haversineDistance(latitude, longitude, waypoint.lat, waypoint.long, Config.earthRadiusKm!!)
+            val distance = haversineDistance(latitude, longitude, waypoint.latitude, waypoint.longitude, Config.earthRadiusKm!!)
             if (distance <= r) {
                 resultWaypoints.add(waypoint)
             }
@@ -101,7 +101,7 @@ object WaypointService {
     fun waypointsOutsideGeofence(): WaypointsOutsideGeofence {
         val geofenceCenter = Waypoint(0.0, Config.geofenceCenterLatitude, Config.geofenceCenterLongitude)
         val outsideWaypoints =  waypoints.filter { waypoint ->
-            haversineDistance(geofenceCenter.lat, geofenceCenter.long, waypoint.lat, waypoint.long, Config.earthRadiusKm!!) > Config.geofenceRadiusKm
+            haversineDistance(geofenceCenter.latitude, geofenceCenter.longitude, waypoint.latitude, waypoint.longitude, Config.earthRadiusKm!!) > Config.geofenceRadiusKm
         }
         return WaypointsOutsideGeofence(geofenceCenter, Config.geofenceRadiusKm, outsideWaypoints.size, outsideWaypoints)
     }
