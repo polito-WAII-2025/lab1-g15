@@ -3,6 +3,7 @@ package org.routeanalyzer.service
 import org.routeanalyzer.config.Config
 import org.routeanalyzer.model.MaxDistanceFromStart
 import org.routeanalyzer.model.Waypoint
+import org.routeanalyzer.model.WaypointsOutsideGeofence
 import java.io.File
 import kotlin.math.sqrt
 import kotlin.math.sin
@@ -95,5 +96,13 @@ object WaypointService {
         } else {
             0.0
         }
+    }
+
+    fun waypointsOutsideGeofence(): WaypointsOutsideGeofence {
+        val geofenceCenter = Waypoint(0.0, Config.geofenceCenterLatitude, Config.geofenceCenterLongitude)
+        val outsideWaypoints =  waypoints.filter { waypoint ->
+            haversineDistance(geofenceCenter.lat, geofenceCenter.long, waypoint.lat, waypoint.long, Config.earthRadiusKm!!) > Config.geofenceRadiusKm
+        }
+        return WaypointsOutsideGeofence(geofenceCenter, Config.geofenceRadiusKm, outsideWaypoints.size, outsideWaypoints)
     }
 }
