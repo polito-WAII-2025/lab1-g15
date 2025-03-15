@@ -2,6 +2,7 @@ package org.routeanalyzer.service
 
 import org.routeanalyzer.config.Config
 import org.routeanalyzer.model.MaxDistanceFromStart
+import org.routeanalyzer.model.MostFrequentedArea
 import org.routeanalyzer.model.Waypoint
 import org.routeanalyzer.model.WaypointsOutsideGeofence
 import java.io.File
@@ -104,5 +105,36 @@ object WaypointService {
             haversineDistance(geofenceCenter.latitude, geofenceCenter.longitude, waypoint.latitude, waypoint.longitude, Config.earthRadiusKm!!) > Config.geofenceRadiusKm
         }
         return WaypointsOutsideGeofence(geofenceCenter, Config.geofenceRadiusKm, outsideWaypoints.size, outsideWaypoints)
+    }
+
+    fun mostFrequentedArea(): MostFrequentedArea {
+        // Creating a map where the key is the waypoint itself and the value is a list of doubles
+        var resultWaypoints = mutableMapOf<Waypoint, MutableList<Double>>()
+
+        // Iterating over the waypoints to add the number of waypoints within a certain radius as first element of the value's list
+        for (waypoint in waypoints) {
+            resultWaypoints[waypoint] = mutableListOf(waypointsWithinRegion(waypoint.latitude, waypoint.longitude, Config.mostFrequentedAreaRadiusKm!!).size.toDouble())
+        }
+
+        // Getting the highest number of waypoints within a certain radius and filtering the map to only keep waypoints with that number
+        val maxWaypointFrequency = (resultWaypoints.values.maxOfOrNull { it[0] } ?: 0).toDouble()
+        resultWaypoints = resultWaypoints.filterValues { it[0] == maxWaypointFrequency }.toMutableMap()
+
+        // Returning early if there are no ties after first filtering
+        if (resultWaypoints.size == 1) {
+            return MostFrequentedArea(resultWaypoints.keys.first(), Config.mostFrequentedAreaRadiusKm!!, resultWaypoints.values.first()[0].toInt())
+        }
+
+        // Iterating over the remaining waypoints to add the time spent within a certain radius as second element of the value's list
+        for ((waypointKey, waypointValue) in resultWaypoints) {
+            waypointValue.add(timeSpentWithinRegion(waypointKey.latitude, waypointKey.longitude, Config.mostFrequentedAreaRadiusKm!!))
+        }
+
+        // Getting the highest time spent within a certain radius and filtering the map to only keep waypoints with that time
+        val maxTimeSpent = (resultWaypoints.values.maxOfOrNull { it[1] } ?: 0).toDouble()
+        resultWaypoints = resultWaypoints.filterValues { it[1] == maxTimeSpent }.toMutableMap()
+
+        // Returning the first remaining waypoint with the highest frequency and time
+        return MostFrequentedArea(resultWaypoints.keys.first(), Config.mostFrequentedAreaRadiusKm!!, resultWaypoints.values.first()[0].toInt())
     }
 }
