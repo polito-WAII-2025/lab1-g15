@@ -1,33 +1,30 @@
 package org.routeanalyzer.service
 
-import org.routeanalyzer.config.Config
 import org.routeanalyzer.model.MaxDistanceFromStart
 import org.routeanalyzer.model.MostFrequentedArea
 import org.routeanalyzer.model.Waypoint
 import org.routeanalyzer.model.WaypointsOutsideGeofence
 import java.io.File
-import kotlin.math.sqrt
-import kotlin.math.sin
-import kotlin.math.cos
-import kotlin.math.atan2
-import kotlin.math.pow
+import kotlin.math.*
 
 object WaypointService {
-    private var waypoints: List<Waypoint> = emptyList()
+    private val waypoints: MutableList<Waypoint> = mutableListOf()
 
     fun loadWaypoints(path: String) {
-        if (waypoints.isNotEmpty()) {
-            return
+        if (waypoints.isNotEmpty()) return
+        // Read file using sequence and populate the list in place
+        File(path).useLines { lines ->
+            waypoints.addAll(
+                lines.map { line ->
+                    // Destructure the line and convert to Double
+                    val (timestamp, lat, lon) = line.split(";").map { it.toDouble() }
+                    Waypoint(timestamp, lat, lon)
+                }
+            )
         }
-        val file = File(path)
-        val loadedWaypoints = file.readLines().map { line ->
-            val parts = line.split(";")
-            Waypoint(parts[0].toDouble(), parts[1].toDouble(), parts[2].toDouble())
-        }
-        waypoints = loadedWaypoints
     }
 
-    fun maxDistanceFromStart(): MaxDistanceFromStart {
+    fun maxDistanceFromStart(earthRadiusKm: Double): MaxDistanceFromStart {
         val start: Waypoint = waypoints.first()
         var maxDistance = 0.0
         var resultWaypoint: Waypoint = start
@@ -35,7 +32,7 @@ object WaypointService {
             val distance = haversineDistance(
                 start.latitude, start.longitude,
                 waypoint.latitude, waypoint.longitude,
-                Config.earthRadiusKm!!
+                earthRadiusKm
             )
             if (distance > maxDistance) {
                 maxDistance = distance
@@ -48,11 +45,13 @@ object WaypointService {
     private fun waypointsWithinRegion(
         latitude: Double,
         longitude: Double,
-        r: Double
+        r: Double,
+        earthRadiusKm: Double
     ): List<Waypoint> {
         val resultWaypoints = mutableListOf<Waypoint>()
         for (waypoint in waypoints) {
-            val distance = haversineDistance(latitude, longitude, waypoint.latitude, waypoint.longitude, Config.earthRadiusKm!!)
+            val distance =
+                haversineDistance(latitude, longitude, waypoint.latitude, waypoint.longitude, earthRadiusKm)
             if (distance <= r) {
                 resultWaypoints.add(waypoint)
             }
@@ -67,6 +66,12 @@ object WaypointService {
         lon2: Double,
         earthRadiusKm: Double
     ): Double {
+        // Validate latitude (-90 to 90) and longitude (-180 to 180)
+        require(lat1 in -90.0..90.0) { "Invalid lat1: $lat1. Must be between -90 and 90." }
+        require(lat2 in -90.0..90.0) { "Invalid lat2: $lat2. Must be between -90 and 90." }
+        require(lon1 in -180.0..180.0) { "Invalid lon1: $lon1. Must be between -180 and 180." }
+        require(lon2 in -180.0..180.0) { "Invalid lon2: $lon2. Must be between -180 and 180." }
+
         val lat1Rad = Math.toRadians(lat1)
         val lon1Rad = Math.toRadians(lon1)
         val lat2Rad = Math.toRadians(lat2)
@@ -81,10 +86,10 @@ object WaypointService {
         return earthRadiusKm * c  // Distance in km
     }
 
-    private fun timeSpentWithinRegion(latitude: Double, longitude: Double, r: Double): Double {
+    private fun timeSpentWithinRegion(latitude: Double, longitude: Double, r: Double, earthRadiusKm: Double): Double {
         var minTime: Double = Double.MAX_VALUE
         var maxTime: Double = Double.MIN_VALUE
-        val waypointsWithinRegion: List<Waypoint> = waypointsWithinRegion(latitude, longitude, r)
+        val waypointsWithinRegion: List<Waypoint> = waypointsWithinRegion(latitude, longitude, r, earthRadiusKm)
         for (waypoint in waypointsWithinRegion) {
             if (waypoint.timestamp < minTime) {
                 minTime = waypoint.timestamp
@@ -99,28 +104,33 @@ object WaypointService {
         }
     }
 
-    fun waypointsOutsideGeofence(): WaypointsOutsideGeofence {
+    fun waypointsOutsideGeofence(
+        geofenceRadiusKm: Double,
+        geofenceCenterLatitude: Double,
+        geofenceCenterLongitude: Double,
+        earthRadiusKm: Double
+    ): WaypointsOutsideGeofence {
         val geofenceCenter = Waypoint(
             0.0,
-            Config.geofenceCenterLatitude,
-            Config.geofenceCenterLongitude
+            geofenceCenterLatitude,
+            geofenceCenterLongitude
         )
-        val outsideWaypoints =  waypoints.filter { waypoint ->
+        val outsideWaypoints = waypoints.filter { waypoint ->
             haversineDistance(
                 geofenceCenter.latitude, geofenceCenter.longitude,
                 waypoint.latitude, waypoint.longitude,
-                Config.earthRadiusKm!!
-            ) > Config.geofenceRadiusKm
+                earthRadiusKm
+            ) > geofenceRadiusKm
         }
         return WaypointsOutsideGeofence(
             geofenceCenter,
-            Config.geofenceRadiusKm,
+            geofenceRadiusKm,
             outsideWaypoints.size,
             outsideWaypoints
         )
     }
 
-    fun mostFrequentedArea(): MostFrequentedArea {
+    fun mostFrequentedArea(mostFrequentedAreaRadiusKm: Double, earthRadiusKm: Double): MostFrequentedArea {
         // Creating a map where the key is the waypoint itself and the value is a list of doubles
         var resultWaypoints = mutableMapOf<Waypoint, MutableList<Double>>()
 
@@ -130,7 +140,8 @@ object WaypointService {
                 waypointsWithinRegion(
                     waypoint.latitude,
                     waypoint.longitude,
-                    Config.mostFrequentedAreaRadiusKm!!
+                    mostFrequentedAreaRadiusKm,
+                    earthRadiusKm
                 ).size.toDouble()
             )
         }
@@ -143,7 +154,7 @@ object WaypointService {
         if (resultWaypoints.size == 1) {
             return MostFrequentedArea(
                 resultWaypoints.keys.first(),
-                Config.mostFrequentedAreaRadiusKm!!,
+                mostFrequentedAreaRadiusKm,
                 resultWaypoints.values.first()[0].toInt()
             )
         }
@@ -154,7 +165,8 @@ object WaypointService {
                 timeSpentWithinRegion(
                     waypointKey.latitude,
                     waypointKey.longitude,
-                    Config.mostFrequentedAreaRadiusKm!!
+                    mostFrequentedAreaRadiusKm,
+                    earthRadiusKm
                 )
             )
         }
@@ -166,7 +178,7 @@ object WaypointService {
         // Returning the first remaining waypoint with the highest frequency and time
         return MostFrequentedArea(
             resultWaypoints.keys.first(),
-            Config.mostFrequentedAreaRadiusKm!!,
+            mostFrequentedAreaRadiusKm,
             resultWaypoints.values.first()[0].toInt()
         )
     }

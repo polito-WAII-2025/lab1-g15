@@ -1,8 +1,8 @@
 package org.routeanalyzer.config
 
 
-import java.io.File
 import org.yaml.snakeyaml.Yaml
+import java.io.File
 
 
 object Config {
