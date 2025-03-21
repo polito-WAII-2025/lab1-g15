@@ -171,12 +171,15 @@ class WaypointServiceTest {
 
     @Nested
     inner class LoadWaypointsTests {
-        private val filePath = javaClass.getResource("/waypoints.csv")?.path
-            ?: throw IllegalArgumentException("Test file 'waypoints.csv' not found")
-        private val filePath2 = javaClass.getResource("/waypoints2.csv")?.path
-            ?: throw IllegalArgumentException("Test file 'waypoints2.csv' not found")
-        private val emptyFilePath = javaClass.getResource("/waypoints_empty.csv")?.path
-            ?: throw IllegalArgumentException("Test file 'waypoints_empty.csv' not found")
+        private val filePath =
+            javaClass.getResource("/waypoints.csv")?.path?.let { java.net.URLDecoder.decode(it, "UTF-8") }
+                ?: throw IllegalArgumentException("Test file 'waypoints.csv' not found")
+        private val filePath2 =
+            javaClass.getResource("/waypoints2.csv")?.path?.let { java.net.URLDecoder.decode(it, "UTF-8") }
+                ?: throw IllegalArgumentException("Test file 'waypoints2.csv' not found")
+        private val emptyFilePath =
+            javaClass.getResource("/waypoints_empty.csv")?.path?.let { java.net.URLDecoder.decode(it, "UTF-8") }
+                ?: throw IllegalArgumentException("Test file 'waypoints_empty.csv' not found")
 
         @BeforeEach
         @DisplayName("Set the waypoints list to an empty list")
