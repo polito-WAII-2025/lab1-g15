@@ -1,0 +1,46 @@
+# Ignore Gradle/Maven build directories and caches
+.gradle/
+build/
+.kotlin
+out/
+target/
+
+# Ignore IDE specific files
+.idea/
+.vscode/
+
+# Ignore Kotlin compiled classes and artifacts
+*.jar
+*.war
+*.ear
+*.hprof
+
+# Ignore log files
+*.log
+
+# Ignore local configuration files (e.g., IDE configurations, local environment settings)
+*.iml
+*.swp
+*.swo
+*.bak
+
+# Ignore version control directories (Git, SVN, etc.)
+.git/
+.gitignore
+.svn/
+
+# Ignore any temp or cache directories
+/tmp/
+.cache/
+
+# Ignore operating system-specific files (Mac, Windows)
+.DS_Store
+Thumbs.db
+
+# Ignore the resources folder if you want to use a different config path in Docker
+resources/
+
+# Ignore any sensitive files (e.g., environment config files, passwords)
+.env
+*.env
+.directory

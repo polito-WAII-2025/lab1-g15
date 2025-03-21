@@ -9,8 +9,18 @@ import org.routeanalyzer.service.WaypointService
 import java.io.File
 
 fun main() {
-    Config.loadParams("RouteAnalyzer/src/main/resources/custom-parameters.yml")
-    WaypointService.loadWaypoints("RouteAnalyzer/src/main/resources/waypoints.csv")
+    val resourcesFolder = "RouteAnalyzer/src/main/resources"
+    val isContainer = System.getenv("CONTAINER")?.toBoolean() ?: false
+
+    val configFile =
+        if (isContainer) "/app/resources/" + System.getenv("CONFIG_FILE") else "$resourcesFolder/custom-parameters.yml"
+    val waypointsFile =
+        if (isContainer) "/app/resources/" + System.getenv("WAYPOINTS_FILE") else "$resourcesFolder/waypoints.csv"
+
+    println("Loading config from $configFile")
+    Config.loadParams(configFile)
+    WaypointService.loadWaypoints(waypointsFile)
+
     val maxDistanceFromStart: MaxDistanceFromStart = WaypointService.maxDistanceFromStart(Config.earthRadiusKm!!)
     if (Config.mostFrequentedAreaRadiusKm == null) {
         Config.mostFrequentedAreaRadiusKm = maxDistanceFromStart.distanceKm / 10
@@ -28,7 +38,7 @@ fun main() {
             )
         )
     )
-    val outputFile = File("output.json")
+    val outputFile = if (isContainer) File("./resources/output.json") else File("./evaluation/output.json")
     outputFile.writeText(resultJsonString)
     println("JSON file written successfully with the following result: \n $resultJsonString")
 }

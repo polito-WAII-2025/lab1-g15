@@ -14,12 +14,16 @@ object Config {
 
 
     fun loadParams(path: String) {
+        println("Loading config parameters")
         if (earthRadiusKm != null) {
             return
         }
         val yaml = Yaml()
+        println("after yaml")
         val inputStream = File(path).inputStream()
+        println("after input stream")
         val data: Map<String, Any> = yaml.load(inputStream)
+        println("After data")
         earthRadiusKm = (data["earthRadiusKm"] as Number).toDouble()
         geofenceCenterLatitude = (data["geofenceCenterLatitude"] as Number).toDouble()
         geofenceCenterLongitude = (data["geofenceCenterLongitude"] as Number).toDouble()
