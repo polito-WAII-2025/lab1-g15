@@ -48,13 +48,8 @@ object WaypointService {
         r: Double,
         earthRadiusKm: Double
     ): List<Waypoint> {
-        val resultWaypoints = mutableListOf<Waypoint>()
-        for (waypoint in waypoints) {
-            val distance =
-                haversineDistance(latitude, longitude, waypoint.latitude, waypoint.longitude, earthRadiusKm)
-            if (distance <= r) {
-                resultWaypoints.add(waypoint)
-            }
+        val resultWaypoints: List<Waypoint> = waypoints.filter { waypoint ->
+            haversineDistance(latitude, longitude, waypoint.latitude, waypoint.longitude, earthRadiusKm) <= r
         }
         return resultWaypoints
     }
@@ -90,7 +85,7 @@ object WaypointService {
         var minTime: Double = Double.MAX_VALUE
         var maxTime: Double = Double.MIN_VALUE
         val waypointsWithinRegion: List<Waypoint> = waypointsWithinRegion(latitude, longitude, r, earthRadiusKm)
-        for (waypoint in waypointsWithinRegion) {
+        waypointsWithinRegion.forEach { waypoint ->
             if (waypoint.timestamp < minTime) {
                 minTime = waypoint.timestamp
             } else if (waypoint.timestamp > maxTime) {
@@ -98,7 +93,7 @@ object WaypointService {
             }
         }
         return if (minTime != Double.MAX_VALUE && maxTime != Double.MIN_VALUE) {
-            ((maxTime - minTime) * 10000).toInt().toDouble() / 10000
+            (maxTime - minTime)
         } else {
             0.0
         }
@@ -135,7 +130,7 @@ object WaypointService {
         var resultWaypoints = mutableMapOf<Waypoint, MutableList<Double>>()
 
         // Iterating over the waypoints to add the number of waypoints within a certain radius as first element of the value's list
-        for (waypoint in waypoints) {
+        waypoints.forEach { waypoint ->
             resultWaypoints[waypoint] = mutableListOf(
                 waypointsWithinRegion(
                     waypoint.latitude,
@@ -145,6 +140,7 @@ object WaypointService {
                 ).size.toDouble()
             )
         }
+
 
         // Getting the highest number of waypoints within a certain radius and filtering the map to only keep waypoints with that number
         val maxWaypointFrequency = (resultWaypoints.values.maxOfOrNull { it[0] } ?: 0).toDouble()
@@ -160,7 +156,7 @@ object WaypointService {
         }
 
         // Iterating over the remaining waypoints to add the time spent within a certain radius as second element of the value's list
-        for ((waypointKey, waypointValue) in resultWaypoints) {
+        resultWaypoints.forEach { (waypointKey, waypointValue) ->
             waypointValue.add(
                 timeSpentWithinRegion(
                     waypointKey.latitude,
