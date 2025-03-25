@@ -4,7 +4,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.routeanalyzer.config.Config
 import org.routeanalyzer.model.AnalysisResult
-import org.routeanalyzer.model.MaxDistanceFromStart
 import org.routeanalyzer.service.WaypointService
 import java.io.File
 
@@ -12,16 +11,18 @@ fun main() {
     val resourcesFolder = "RouteAnalyzer/src/main/resources"
     val isContainer = System.getenv("CONTAINER")?.toBoolean() ?: false
 
-    val configFile =
+    val configFilePath =
         if (isContainer) "/app/resources/" + System.getenv("CONFIG_FILE") else "$resourcesFolder/custom-parameters.yml"
-    val waypointsFile =
+    val waypointsFilePath =
         if (isContainer) "/app/resources/" + System.getenv("WAYPOINTS_FILE") else "$resourcesFolder/waypoints.csv"
 
-    println("Loading config from $configFile")
-    Config.loadParams(configFile)
-    WaypointService.loadWaypoints(waypointsFile)
+    println("Loading config from $configFilePath")
+    Config.loadParams(configFilePath)
 
-    val maxDistanceFromStart: MaxDistanceFromStart = WaypointService.maxDistanceFromStart(Config.earthRadiusKm!!)
+    println("Loading waypoints from $waypointsFilePath")
+    WaypointService.loadWaypoints(waypointsFilePath)
+
+    val maxDistanceFromStart = WaypointService.maxDistanceFromStart(Config.earthRadiusKm!!)
     if (Config.mostFrequentedAreaRadiusKm == null) {
         Config.mostFrequentedAreaRadiusKm = maxDistanceFromStart.distanceKm / 10
     }
@@ -40,5 +41,5 @@ fun main() {
     )
     val outputFile = if (isContainer) File("./resources/output.json") else File("./evaluation/output.json")
     outputFile.writeText(resultJsonString)
-    println("JSON file written successfully with the following result: \n $resultJsonString")
+    println("JSON file written successfully")
 }
