@@ -1,5 +1,5 @@
 earthRadiusKm: 6371
-geofenceCenterLatitude: 0.0
-geofenceCenterLongitude: 0.0
-geofenceRadiusKm: 10
-mostFrequentedAreaRadiusKm: 5 #Optional
+geofenceCenterLatitude: 45.07088725332156
+geofenceCenterLongitude: 7.673259840085279
+geofenceRadiusKm: 1.0
+mostFrequentedAreaRadiusKm: 1.0 #Optional
