@@ -39,7 +39,7 @@ fun main() {
             )
         )
     )
-    val outputFile = if (isContainer) File("./resources/output.json") else File("./evaluation/output.json")
+    val outputFile = if (isContainer) File("./resources/output.json") else File("$resourcesFolder/output.json")
     outputFile.writeText(resultJsonString)
     println("JSON file written successfully")
 }
