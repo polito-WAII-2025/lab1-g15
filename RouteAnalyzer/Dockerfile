@@ -15,8 +15,10 @@ COPY gradle /app/gradle
 # Copy the source files (src/ folder)
 COPY src /app/src
 
-# Download dependencies and build the application (assuming Gradle here)
+# Convert line endings and give execution permissions
 RUN sed -i 's/\r$//' gradlew && chmod +x gradlew
+
+# Build the application (skip tests)
 RUN ./gradlew clean shadowJar --no-daemon -x test
 
 ###################
