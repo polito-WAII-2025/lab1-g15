@@ -2,6 +2,7 @@ package org.routeanalyzer.config
 
 
 import org.yaml.snakeyaml.Yaml
+import org.yaml.snakeyaml.error.YAMLException
 import java.io.File
 
 
@@ -23,35 +24,37 @@ object Config {
 
             try {
                 earthRadiusKm = (data["earthRadiusKm"] as Number).toDouble()
-            } catch (e: Exception) {
+            } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("Invalid value for 'earthRadiusKm'. Expected a number, but got: ${data["earthRadiusKm"]}")
+            } catch (e: Exception) {
+                throw e
             }
 
             try {
                 geofenceCenterLatitude = (data["geofenceCenterLatitude"] as Number).toDouble()
-            } catch (e: Exception) {
+            } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("Invalid value for 'geofenceCenterLatitude'. Expected a number, but got: ${data["geofenceCenterLatitude"]}")
             }
 
             try {
                 geofenceCenterLongitude = (data["geofenceCenterLongitude"] as Number).toDouble()
-            } catch (e: Exception) {
+            } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("Invalid value for 'geofenceCenterLongitude'. Expected a number, but got: ${data["geofenceCenterLongitude"]}")
             }
 
             try {
                 geofenceRadiusKm = (data["geofenceRadiusKm"] as Number).toDouble()
-            } catch (e: Exception) {
+            } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("Invalid value for 'geofenceRadiusKm'. Expected a number, but got: ${data["geofenceRadiusKm"]}")
             }
 
             try {
                 mostFrequentedAreaRadiusKm = (data["mostFrequentedAreaRadiusKm"] as? Number)?.toDouble()
-            } catch (e: Exception) {
+            } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("Invalid value for 'mostFrequentedAreaRadiusKm'. Expected a number or null, but got: ${data["mostFrequentedAreaRadiusKm"]}")
             }
-        } catch (e: Exception) {
-            throw IllegalArgumentException("Error loading configuration from '$path': ${e.message}")
+        } catch (e: YAMLException) {
+            throw YAMLException("Error loading configuration from '$path': ${e.message}")
         }
     }
 }

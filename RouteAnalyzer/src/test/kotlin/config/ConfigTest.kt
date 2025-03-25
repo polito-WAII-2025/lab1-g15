@@ -1,10 +1,7 @@
 package config
 
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.routeanalyzer.config.Config
 import org.yaml.snakeyaml.error.YAMLException
 import kotlin.test.assertNull
@@ -51,6 +48,13 @@ class ConfigTest {
 
     @Nested
     inner class LoadParamsTests {
+
+        @BeforeEach
+        fun setup() {
+            // Reset internal state
+            Config.earthRadiusKm = null
+        }
+
         @Test
         @DisplayName("It should correctly load all the parameters")
         fun loadParamsSuccess() {
