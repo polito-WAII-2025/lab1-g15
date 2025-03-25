@@ -1,0 +1,5 @@
+earthRadiusKm: aaa6371
+geofenceCenterLatitude: aaa0.0
+geofenceCenterLongitude: 0.0
+geofenceRadiusKm: aaa10
+mostFrequentedAreaRadiusKm: 5 #Optional

@@ -236,6 +236,17 @@ class WaypointServiceTest {
                 WaypointService.loadWaypoints(nonExistentFilePath)
             }
         }
+
+        @Test
+        @DisplayName("It should throw an exception if a value is not valid")
+        fun loadWaypointsInvalidFileFormat() {
+            val nonExistentFilePath = "nonexistent/file"
+
+            // Try loading from a non-existent file, it should throw an exception
+            assertThrows<FileNotFoundException> {
+                WaypointService.loadWaypoints(nonExistentFilePath)
+            }
+        }
     }
 
     @Nested

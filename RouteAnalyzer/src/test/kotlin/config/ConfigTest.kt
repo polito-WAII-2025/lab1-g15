@@ -10,18 +10,43 @@ import org.yaml.snakeyaml.error.YAMLException
 import kotlin.test.assertNull
 
 class ConfigTest {
-    private val filePath = javaClass.getResource("/custom-parameters.yml")?.path
-        ?: throw IllegalArgumentException("Test file 'custom-parameters.yml' not found")
+    private val filePathCorrect =
+        javaClass.getResource("/custom-parameters.yml")?.path?.let { java.net.URLDecoder.decode(it, "UTF-8") }
+            ?: throw IllegalArgumentException("Test file 'custom-parameters.yml' not found")
+
     private val filePathNoOptional = javaClass.getResource(
         "/custom-parameters-no-optional.yml"
-    )?.path
+    )?.path?.let { java.net.URLDecoder.decode(it, "UTF-8") }
         ?: throw IllegalArgumentException(
             "Test file 'custom-parameters-no-optional.yml' not found"
         )
-    private val filePathInvalid = javaClass.getResource("/custom-parameters-invalid.yml")?.path
-        ?: throw IllegalArgumentException("Test file 'custom-parameters-invalid.yml' not found")
-    private val invalidYmlFilePath = javaClass.getResource("/invalid.yml")?.path
-        ?: throw IllegalArgumentException("Test file 'invalid.yml' not found")
+
+    private val filePathNoRequired =
+        javaClass.getResource("/custom-parameters-no-required.yml")?.path?.let {
+            java.net.URLDecoder.decode(
+                it,
+                "UTF-8"
+            )
+        }
+            ?: throw IllegalArgumentException("Test file 'custom-parameters-custom-parameters-invalid-format.yml' not found")
+
+    private val filePathInvalidFormat =
+        javaClass.getResource("/custom-parameters-invalid-format.yml")?.path?.let {
+            java.net.URLDecoder.decode(
+                it,
+                "UTF-8"
+            )
+        }
+            ?: throw IllegalArgumentException("Test file 'custom-parameters-invalid-format.yml' not found")
+
+    private val filePathInvalidDataType =
+        javaClass.getResource("/custom-parameters-invalid-type.yml")?.path?.let {
+            java.net.URLDecoder.decode(
+                it,
+                "UTF-8"
+            )
+        }
+            ?: throw IllegalArgumentException("Test file 'custom-parameters-invalid-type.yml' not found")
 
 
     @Nested
@@ -29,7 +54,7 @@ class ConfigTest {
         @Test
         @DisplayName("It should correctly load all the parameters")
         fun loadParamsSuccess() {
-            Config.loadParams(filePath)
+            Config.loadParams(filePathCorrect)
 
             assertEquals(6371.0, Config.earthRadiusKm)
             assertEquals(0.0, Config.geofenceCenterLatitude)
@@ -41,13 +66,13 @@ class ConfigTest {
         @Test
         @DisplayName("It should load the parameters only once")
         fun loadParamsOnlyOnce() {
-            Config.loadParams(filePath)
+            Config.loadParams(filePathCorrect)
 
             // Change values after first load
             Config.earthRadiusKm = 5000.0
 
             // Call loadParams again
-            Config.loadParams(filePath)
+            Config.loadParams(filePathCorrect)
 
             assertEquals(5000.0, Config.earthRadiusKm)
         }
@@ -68,7 +93,7 @@ class ConfigTest {
         @DisplayName("It should throw an exception when required fields are missing")
         fun loadParamsMissingRequired() {
             assertThrows<NullPointerException> {
-                Config.loadParams(filePathInvalid)
+                Config.loadParams(filePathNoRequired)
             }
         }
 
@@ -76,7 +101,15 @@ class ConfigTest {
         @DisplayName("It should throw an exception if the YAML file is invalid")
         fun loadParamsInvalidFile() {
             assertThrows<YAMLException> {
-                Config.loadParams(invalidYmlFilePath)
+                Config.loadParams(filePathInvalidFormat)
+            }
+        }
+
+        @Test
+        @DisplayName("It should throw an exception if data type is invalid")
+        fun loadParamsInvalidDataType() {
+            assertThrows<ClassCastException> {
+                Config.loadParams(filePathInvalidDataType)
             }
         }
     }

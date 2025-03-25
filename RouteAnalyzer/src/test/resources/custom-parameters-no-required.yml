@@ -1,3 +1,4 @@
+#earthRadiusKm: 6371
 geofenceCenterLatitude: 0.0
 geofenceCenterLongitude: 0.0
 geofenceRadiusKm: 10
