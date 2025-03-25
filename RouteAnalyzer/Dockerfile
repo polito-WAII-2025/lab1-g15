@@ -1,4 +1,6 @@
-# Use an OpenJDK image to build and run the app
+#################
+## BUILD STAGE ##
+#################
 FROM openjdk:23-jdk-slim AS build
 
 # Set working directory inside the container
@@ -17,11 +19,22 @@ COPY src /app/src
 RUN chmod +x ./gradlew
 RUN ./gradlew clean shadowJar --no-daemon -x test
 
-# Use OpenJDK again for runtime, so we can keep the image slim
+###################
+## RUNTIME STAGE ##
+###################
 FROM openjdk:23-jdk-slim
 
 # Set working directory inside the container
 WORKDIR /app
+
+# Run as non-root user
+RUN adduser --disabled-password --gecos "" appuser
+
+# Create the resources directory and set correct permissions
+RUN mkdir -p /app/resources && chown -R appuser:appuser /app
+
+# Switch to the non-root user
+USER appuser
 
 # Create the resources directory
 RUN mkdir -p resources
