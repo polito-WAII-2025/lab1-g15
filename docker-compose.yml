@@ -3,11 +3,9 @@ services:
     build:
       context: RouteAnalyzer
       dockerfile: Dockerfile
-    container_name: route-analyzer-v1
+    container_name: lab1-g15-route-analyzer
     environment:
       - CONFIG_FILE=custom-parameters.yml
       - WAYPOINTS_FILE=waypoints.csv
     volumes:
       - ./evaluation:/app/resources
-    entrypoint:
-      - "cd resources"
